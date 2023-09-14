@@ -1,0 +1,9 @@
+TO DO: TEST DEPLOYMENT ON ALL THE THINGS!!!
+
+Here are the function urls:
+
+https://pdf-textraction-summarizer-functions.azurewebsites.net/api/upload-convert-pdf?code=xXx2Fvu7j5buRxlXya3PQ5Q1C1Dh92en097rh52Udc4DAzFu8g3g3g==
+
+https://pdf-textraction-summarizer-functions.azurewebsites.net/api/textraction?code=60J4jYC9jpZdNduxwgbOq8NnYNX1getnKzg18ok8VKj1AzFucIqOpg==
+
+https://pdf-textraction-summarizer-functions.azurewebsites.net/api/generate_summary?code=G7e0MdZDcCIH9LpaHK8VAtT-DoLVFA3I7vgYk8LbglY9AzFufkV3rw==
