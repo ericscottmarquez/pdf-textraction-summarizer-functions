@@ -4,7 +4,8 @@ from PyPDF2 import PdfFileReader
 from PIL import Image
 import io
 import pymongo
-from azure import func
+import azure.functions as func
+from pdf2image import convert_from_path
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -25,16 +26,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         container_name = "pdfsummarizer"
         folder_name = os.path.splitext(pdf_file.filename)[0] + f'_{user_id}/'
         
-        # Step 3 and 4: Convert the PDF to a series of images and upload each image to the new folder
-        pdf_reader = PdfFileReader(pdf_file)
-        for page_num in range(pdf_reader.getNumPages()):
-            page = pdf_reader.getPage(page_num)
-            image_writer = Image.new('RGB', (page.mediaBox.getWidth(), page.mediaBox.getHeight()), (255, 255, 255))
-            image_writer.save(io.BytesIO(), format='JPEG')
+        images = convert_from_path(pdf_file)
+        for page_num, image in enumerate(images):
+            image_io = io.BytesIO()
+            image.save(image_io, format='JPEG')
             
             blob_name = folder_name + f'{page_num}.jpeg'
             blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-            blob_client.upload_blob(io.BytesIO(), overwrite=True)
+            blob_client.upload_blob(image_io.getvalue(), overwrite=True)
         
         # Step 5: Get the URL of the blob and save it in MongoDB
         blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{folder_name}"

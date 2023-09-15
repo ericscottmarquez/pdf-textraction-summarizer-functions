@@ -1,10 +1,12 @@
 # DO NOT include azure-functions-worker in this file
 # The Python Worker is managed by Azure Functions platform
 # Manually managing azure-functions-worker may cause unexpected issues
-
 azure-functions
-openai
 azure-cognitiveservices-vision-computervision
-pillow
+msrest
 azure-storage-blob
+openai
 PyPDF2
+pillow # This is the library that provides the PIL package
+pymongo
+pdf2image
