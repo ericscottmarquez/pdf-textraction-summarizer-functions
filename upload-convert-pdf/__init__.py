@@ -5,9 +5,10 @@ from PIL import Image
 import io
 import pymongo
 import azure.functions as func
-from pdf2image import convert_from_bytes
+# from pdf2image import convert_from_bytes
 import time
 import logging
+import fitz  # PyMuPDF
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -43,15 +44,36 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f"Folder name: {folder_name}")
 
         time.sleep(5)  # Wait for 5 seconds to ensure that the container folder is created
+
         try:
             # Get the byte data from the FileStorage object
             pdf_bytes = pdf_file.read()
             pdf_file.seek(0)  # Reset the file pointer to the start
-            # Convert the byte data to images
-            images = convert_from_bytes(pdf_bytes)
+
+            # Load the PDF bytes data using PyMuPDF
+            pdf = fitz.open(io.BytesIO(pdf_bytes))
+
+            # Initialize an empty list to store images
+            images = []
+
+            for page_num in range(len(pdf)):
+                # Get the page
+                page = pdf[page_num]
+
+                # Convert the page to a pixmap (a kind of image)
+                pix = page.get_pixmap()
+
+                # Convert the pixmap to a PIL Image
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                
+                # Add the image to the list
+                images.append(img)
+
         except Exception as e:
-            # log the error message to the console with a description:
-            logging.info(f"Error at convert_from_bytes: {str(e)}")
+            # Log the error message to the console with a description:
+            logging.info(f"Error at PyMuPDF processing: {str(e)}")
+
+
 
         for page_num, image in enumerate(images):
             try:
