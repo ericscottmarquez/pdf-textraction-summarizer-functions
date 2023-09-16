@@ -70,6 +70,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 continue  # Skip to next iteration if this step fails
 
             try:
+                # todo: use pdf_file.name along with text_all to create one large text file instead of 
+                # creating a new blob for each page which is how this currently works.
                 blob_client.upload_blob(text_all, overwrite=True)
             except Exception as e:
                 logging.exception(f"Error uploading blob at page {page_num}: {str(e)}")

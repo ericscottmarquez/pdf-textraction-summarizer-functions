@@ -15,7 +15,7 @@ def main(req: HttpRequest) -> HttpResponse:
         return HttpResponse("Please provide both pdf_name and summary_level", status_code=400)
     
     # You would formulate your prompt here based on the pdf_name and summary_level
-    prompt = f"Summarize the PDF named '{pdf_name}' at a '{summary_level}' level of understanding."
+    prompt = f"Summarize the text file in your custom blob input data named '{pdf_name}' at a '{summary_level}' level of understanding."
     
     try:
         response = openai.ChatCompletion.create(
