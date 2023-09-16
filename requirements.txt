@@ -11,3 +11,5 @@ pillow # This is the library that provides the PIL package
 pymongo
 pdf2image
 pymupdf
+wand
+pypdfium2

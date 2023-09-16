@@ -1,14 +1,12 @@
 import os
+import pypdfium2 as pdfium
 from azure.storage.blob import BlobServiceClient
-from PyPDF2 import PdfFileReader
-from PIL import Image
-import io
 import pymongo
 import azure.functions as func
-# from pdf2image import convert_from_bytes
 import time
 import logging
-import fitz  # PyMuPDF
+# from io import BytesIO
+
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -23,8 +21,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Step 1: Accept a PDF file and a unique userId
         pdf_file = req.files['pdf']
         # log the pdf file
-        logging.info(pdf_file)
+        logging.info(f"PDF File: {pdf_file}")
+
         user_id = req.form['userId']
+
+        # open pdf file from request stream as if it were a file on disk
+        # pdf_bytes = open(pdf_file, 'rb')
+        pdf_bytes = pdf_file.read()
+
+        pdf = pdfium.PdfDocument(pdf_bytes)
+        # file_name = "extracted_pdfium2.txt"
+        # file = open(file_name, 'w')
 
         # log the userId
         logging.info(user_id)
@@ -38,53 +45,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # log the blob service client to the console with a description of the message:
         logging.info(f"Blob service client: {blob_service_client}")
 
-        container_name = "pdfsummarizer"
+        container_name = "converted-pdfs"
         folder_name = os.path.splitext(pdf_file.name)[0] + f'_{user_id}/'
         # log the folder name and a description of the message:
         logging.info(f"Folder name: {folder_name}")
 
         time.sleep(5)  # Wait for 5 seconds to ensure that the container folder is created
 
-        try:
-            # Get the byte data from the FileStorage object
-            pdf_bytes = pdf_file.read()
-            pdf_file.seek(0)  # Reset the file pointer to the start
 
-            # Load the PDF bytes data using PyMuPDF
-            pdf = fitz.open(io.BytesIO(pdf_bytes))
-
-            # Initialize an empty list to store images
-            images = []
-
-            for page_num in range(len(pdf)):
-                # Get the page
-                page = pdf[page_num]
-
-                # Convert the page to a pixmap (a kind of image)
-                pix = page.get_pixmap()
-
-                # Convert the pixmap to a PIL Image
-                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                
-                # Add the image to the list
-                images.append(img)
-
-        except Exception as e:
-            # Log the error message to the console with a description:
-            logging.info(f"Error at PyMuPDF processing: {str(e)}")
-
-
-
-        for page_num, image in enumerate(images):
+        for page_num, page in enumerate(pdf):
+            textpage = page.get_textpage()
+            text_all = textpage.get_text_range()
+            # file.write(text_all)
             try:
-                image_io = io.BytesIO()
-                image.save(image_io, format='JPEG')
-            except Exception as e:
-                logging.exception(f"Error saving image to BytesIO at page {page_num}: {str(e)}")
-                continue  # Skip to next iteration if this step fails
-
-            try:
-                blob_name = folder_name + f'{page_num}.jpeg'
+                blob_name = folder_name + f'{page_num}.txt'
             except Exception as e:
                 logging.exception(f"Error forming blob name at page {page_num}: {str(e)}")
                 continue  # Skip to next iteration if this step fails
@@ -96,19 +70,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 continue  # Skip to next iteration if this step fails
 
             try:
-                blob_client.upload_blob(image_io.getvalue(), overwrite=True)
+                blob_client.upload_blob(text_all, overwrite=True)
             except Exception as e:
                 logging.exception(f"Error uploading blob at page {page_num}: {str(e)}")
                 continue  # Skip to next iteration if this step fails
 
-        
         # Step 5: Get the URL of the blob and save it in MongoDB
         blob_url = f"https://pdfsummarizer.blob.core.windows.net/converted-pdfs/{folder_name}"
         collection.insert_one({"user_id": user_id, "name": folder_name, "blob_url": blob_url})
         
         # Step 6: Return a success status code
         return func.HttpResponse("Success", status_code=200)
-    
+
     except Exception as e:
         # Return an error status code and the error message if there is any exception
         return func.HttpResponse(str(e), status_code=500)

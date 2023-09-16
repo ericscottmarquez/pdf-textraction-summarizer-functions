@@ -1,9 +1,5 @@
 TO DO: TEST DEPLOYMENT ON ALL THE THINGS!!!
 
-Here are the function urls:
 
-https://pdf-textraction-summarizer-functions.azurewebsites.net/api/upload-convert-pdf?code=xXx2Fvu7j5buRxlXya3PQ5Q1C1Dh92en097rh52Udc4DAzFu8g3g3g==
+az functionapp config container set --image mjolnircontainers.azurecr.io/azurefunctionsimage:v1.0.1 --registry-password h4/0kRkOS/4yqc8zIQBEnaQJJ2sSCbaN4+OdrBkuqZ+ACRDcG0ax --registry-username mjolnirContainers --name pdf-summarizer-containerized-functions --resource-group storage-resource-group
 
-https://pdf-textraction-summarizer-functions.azurewebsites.net/api/textraction?code=60J4jYC9jpZdNduxwgbOq8NnYNX1getnKzg18ok8VKj1AzFucIqOpg==
-
-https://pdf-textraction-summarizer-functions.azurewebsites.net/api/generate_summary?code=G7e0MdZDcCIH9LpaHK8VAtT-DoLVFA3I7vgYk8LbglY9AzFufkV3rw==
