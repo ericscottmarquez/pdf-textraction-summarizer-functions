@@ -30,8 +30,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f"userId: {user_id}")
 
         filename = req.form['fileName']
-        logging.info(f"fileName: {filename}")
         filename = filename.replace(".pdf", "")
+        logging.info(f"fileName: {filename}")
 
         summary_level = req.form['summaryLevel']
         logging.info(f"summary_level: {summary_level}")
@@ -66,8 +66,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # prompt = f"At a {summary_level} level of understanding, tell me about the text that discusses: {text_to_upload[:3000]}"
         # prompt = f"Summarize the document {filename.strip()}.txt at a {summary_level} level."
         # prompt = f"Please locate the document with the exact filename '{filename.strip()}.txt'. Summarize its contents accurately at a {summary_level} level of detail. Ensure you are referring to the correct document before generating the summary."
-        prompt = f"Summarize the document {filename.strip()} at a {summary_level} level."
-
+        prompt = f"Summarize the document {filename.strip()}.txt at a {summary_level} level."
         logging.info(f"prompt: {prompt}")
 
         # Wait for 5 seconds to allow the files to be ready AND INDEXER TO COMPLETE
