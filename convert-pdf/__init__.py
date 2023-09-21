@@ -40,12 +40,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f"fileName: {filename}")
         filename = filename.replace(".pdf", "")
 
-        summary_level = req.form['summaryLevel']
-        logging.info(f"summary_level: {summary_level}")
-
-        if not filename or not summary_level:
-            return HttpResponse("Please provide both filename and summary_level", status_code=400)
-
         # open pdf file from request stream as if it were a file on disk
         # pdf_bytes = open(pdf_file, 'rb')
         pdf_bytes = pdf_file.read()
@@ -93,15 +87,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         blob_name = clean_name(folder_name + f'{filename.strip() + ".txt"}')
         logging.info(f"blob_name: {blob_name}")
+        blob_name_pdf_file = clean_name(folder_name + f'{filename.strip() + ".pdf"}')
+        logging.info(f"blob_name_pdf_file: {blob_name_pdf_file}")
+
 
         # Check if a file with the same name already exists in the blob storage
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        # blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        # blob_client_upload_raw_pdf = blob_service_client.get_blob_client(container=container_name, blob=blob_name_pdf_file)
 
-        if blob_client.exists():
-            return func.HttpResponse("You have uploaded a file with that name already. Upload another file or change the file name to upload again.", status_code=400)
 
         try:
             blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            if blob_client.exists():
+                return func.HttpResponse("You have uploaded a file with that name already. Upload another file or change the file name to upload again.", status_code=400)
+            blob_client_upload_raw_pdf = blob_service_client.get_blob_client(container=container_name, blob=blob_name_pdf_file)
+            if blob_client_upload_raw_pdf.exists():
+                return func.HttpResponse("You have uploaded a pdf with that name already. Upload another file or change the file name to upload again.", status_code=400)
             logging.info(f"got blob client: {blob_client}")
 
         except Exception as e:
@@ -110,7 +111,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         try:
             blob_client.upload_blob(buffer_text_to_upload, overwrite=True)
-            logging.info(f"Blob Uploaded!")
+            blob_client_upload_raw_pdf.upload_blob(pdf_bytes, overwrite=True)
+            
+            logging.info(f"Blobs Uploaded!")
             # todo: upload a picture of the first page of the pdf to the blob container:
             # ...
         except Exception as e:
@@ -127,8 +130,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(str(e), status_code=500)
         
         while True:
-            if blob_client.exists():
-                logging.info(f"The blob has been successfully uploaded and is available.")
+            if blob_client.exists() and blob_client_upload_raw_pdf.exists():
+                logging.info(f"The blobs have been successfully uploaded and are available.")
                 break
             else:
                 logging.info(f"The blob is not available yet. Sleeping for 3 seconds before checking again.")
