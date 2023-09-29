@@ -8,7 +8,6 @@ import logging
 from io import BytesIO
 import requests
 import uuid
-import os
 from azure.functions import HttpResponse
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -121,7 +120,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(f"Error forming blob for {filename} " + str(e), status_code=500)
         
         # Step 5: Get the URL of the blob and save it in MongoDB
-        blob_url = f"https://pdfsummarizer.blob.core.windows.net/converted-pdfs/{folder_name}{filename}"
+        blob_url = f"https://pdfsummarizer.blob.core.windows.net/converted-pdfs/{blob_name}"
         logging.info(f"blob_url: {blob_url}")
 
         try:

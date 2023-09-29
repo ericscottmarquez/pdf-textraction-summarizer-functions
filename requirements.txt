@@ -13,3 +13,5 @@ pdf2image
 pymupdf
 wand
 pypdfium2
+requests
+azure-storage-queue
